@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
+import { TowingRequestDomainFacade } from '../towingRequest/towingRequest.domain.facade';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -44,7 +45,7 @@ const BookingForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime, origin, pickupLocation, destinationLocation, distance } = formData;
 
@@ -64,33 +65,31 @@ const BookingForm = () => {
     const costPerKm = 19;
     const totalCost = baseCost + (distance * costPerKm) + tollCost;
 
-    // Send booking request to the backend
-    fetch('https://your-backend-api.com/bookings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ...formData, totalCost }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
-      })
-      .catch((error) => {
-        console.error('Error processing booking:', error);
-        toast({
-          title: 'Error',
-          description: 'There was a problem processing your booking. Please try again later.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+    try {
+      const response = await fetch('https://your-backend-api.com/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, totalCost }),
       });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
+    } catch (error) {
+      console.error('Error processing booking:', error);
+      toast({
+        title: 'Error',
+        description: 'There was a problem processing your booking. Please try again later.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleMapClick = (event) => {
