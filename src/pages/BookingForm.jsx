@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
-import { TowingRequestDomainFacade } from '../towingRequest/towingRequest.domain.facade';
+import { TowingRequestDomainFacade } from '../towingRequest/application/towingRequest.domain.facade';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
