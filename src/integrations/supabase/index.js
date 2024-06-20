@@ -19,24 +19,13 @@ const fromSupabase = async (query) => {
 
 /* supabase integration types
 
-// EXAMPLE TYPES SECTION
-// DO NOT USE TYPESCRIPT
+### TOW
 
-### foos
+| name       | type        | format | required |
+|------------|-------------|--------|----------|
+| id         | int8        | number | true     |
+| created_at | timestamptz | string | true     |
 
-| name    | type | format | required |
-|---------|------|--------|----------|
-| id      | int8 | number | true     |
-| title   | text | string | true     |
-| date    | date | string | true     |
-
-### bars
-
-| name    | type | format | required |
-|---------|------|--------|----------|
-| id      | int8 | number | true     |
-| foo_id  | int8 | number | true     |  // foreign key to foos
-	
 */
 
 // Example hook for models
@@ -69,3 +58,43 @@ export const useAddBar = () => {
     });
 };
 
+export const useTOWs = () => useQuery({
+    queryKey: ['TOWs'],
+    queryFn: () => fromSupabase(supabase.from('TOW').select('*')),
+});
+
+export const useTOW = (id) => useQuery({
+    queryKey: ['TOW', id],
+    queryFn: () => fromSupabase(supabase.from('TOW').select('*').eq('id', id).single()),
+});
+
+export const useAddTOW = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (newTOW) => fromSupabase(supabase.from('TOW').insert([newTOW])),
+        onSuccess: () => {
+            queryClient.invalidateQueries('TOWs');
+        },
+    });
+};
+
+export const useUpdateTOW = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (updatedTOW) => fromSupabase(supabase.from('TOW').update(updatedTOW).eq('id', updatedTOW.id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries('TOWs');
+            queryClient.invalidateQueries(['TOW', updatedTOW.id]);
+        },
+    });
+};
+
+export const useDeleteTOW = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => fromSupabase(supabase.from('TOW').delete().eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries('TOWs');
+        },
+    });
+};
