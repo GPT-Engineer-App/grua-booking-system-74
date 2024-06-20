@@ -36,6 +36,7 @@ const BookingForm = () => {
     if (location.state) {
       const { origin, pickupLocation, destinationLocation } = location.state;
       setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
+      console.log('location.state:', location.state);
     }
   }, [location.state]);
 
@@ -48,7 +49,7 @@ const BookingForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime, origin, pickupLocation, destinationLocation, distance } = formData;
 
@@ -68,40 +69,52 @@ const BookingForm = () => {
     const costPerKm = 19;
     const totalCost = baseCost + (distance * costPerKm) + tollCost;
 
-    // Send booking request to the backend
-    fetch('https://your-backend-api.com/bookings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ...formData, totalCost }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
-      })
-      .catch((error) => {
-        console.error('Error processing booking:', error);
-        toast({
-          title: 'Error',
-          description: 'There was a problem processing your booking. Please try again later.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+    try {
+      console.log('Submitting form with data:', formData);
+      const response = await fetch('https://valid-endpoint-for-booking.com/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, totalCost }),
       });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Booking response:', data);
+      navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
+    } catch (error) {
+      console.error('Error processing booking:', error);
+      toast({
+        title: 'Error',
+        description: 'There was a problem processing your booking. Please try again later.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleMapClick = (event) => {
-    if (!pickupLocation) {
-      setPickupLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-    } else if (!destinationLocation) {
-      setDestinationLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+    try {
+      if (!pickupLocation) {
+        setPickupLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      } else if (!destinationLocation) {
+        setDestinationLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      }
+      console.log('Map clicked at:', event.latLng.lat(), event.latLng.lng());
+    } catch (error) {
+      console.error('Error handling map click:', error);
+      toast({
+        title: 'Error',
+        description: 'There was a problem handling the map click. Please try again later.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -123,13 +136,28 @@ const BookingForm = () => {
           if (mapRef.current) {
             mapRef.current.panTo(userLocation);
           }
+          console.log('User location centered at:', userLocation);
         },
         (error) => {
           console.error('Error getting user location:', error);
+          toast({
+            title: 'Error',
+            description: 'There was a problem getting your location. Please try again later.',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          });
         }
       );
     } else {
       console.error('Geolocation is not supported by this browser.');
+      toast({
+        title: 'Error',
+        description: 'Geolocation is not supported by this browser.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -182,6 +210,13 @@ const BookingForm = () => {
       setTollCost(tolls);
     } catch (error) {
       console.error('Error fetching toll data:', error);
+      toast({
+        title: 'Error',
+        description: 'There was a problem fetching toll data. Please try again later.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
