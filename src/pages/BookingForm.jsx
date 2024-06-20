@@ -199,9 +199,13 @@ const BookingForm = () => {
 
   const fetchTollData = async (origin, destination) => {
     try {
-      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`);
+      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`, {
+        headers: {
+          'x-api-key': process.env.REACT_APP_TOLLGURU_API_KEY,
+        },
+      });
       const data = await response.json();
-      const tolls = data.tolls || 0;
+      const tolls = data.tollCosts || 0;
       setTollCost(tolls);
     } catch (error) {
       console.error('Error fetching toll data:', error);
